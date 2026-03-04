@@ -19,3 +19,28 @@ def input_reader():
 
     return lines, ofile
 
+def label_mapper(lines):
+#it identifies the labels acc to file and assigns pc addresses to them
+    label_table = {}
+    pc = 0
+
+    for i, line in enumerate(lines):
+        if ":" in line:
+            part = line.split(":")
+            label = part[0].strip()
+
+            if not label[0].isalpha():
+                error(i+1, "label name is invalid")
+
+            if label in label_table:
+                error(i+1, "duplicate label")
+
+            label_table[label] = pc
+
+            if part[1].strip() != "":
+                pc += 4
+
+        else:
+            pc += 4
+
+    return label_table
