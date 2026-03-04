@@ -8,7 +8,7 @@ def error(ln_num, msg):
 def input_reader():
 #reads the input 
     if len(sys.argv) != 3:
-        print("invalid arguments")
+        print("Invalid arguments")
         sys.exit(0)
 
     ifile = sys.argv[1]
@@ -30,10 +30,10 @@ def label_mapper(lines):
             label = part[0].strip()
 
             if not label[0].isalpha():
-                error(i+1, "label name is invalid")
+                error(i+1, "Invalid label name")
 
             if label in label_table:
-                error(i+1, "duplicate label")
+                error(i+1, "Duplicate label")
 
             label_table[label] = pc
 
