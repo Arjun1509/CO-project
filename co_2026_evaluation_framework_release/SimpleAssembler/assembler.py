@@ -99,3 +99,19 @@ def encode_i(tokens, funct3, opcode, line_num):
     imm = imm2bin(int(tokens[3], 12, line_num))
 
     return imm + rs1 + funct3 + rd + opcode
+
+# s type instruction set
+def encode_s(tokens,line_num):
+    rs2 = reg_table(tokens[1],line_num)
+    imm_part,rs1 = tokens[2].split("(")
+    rs1 = rs1.replace(")","")
+    rs1 = reg_table(rs1,line_num)
+
+    imm = imm2bin(int(imm_part),12,line_num)
+
+    opcode = "0100011"
+    funct3 = "010"
+
+    return imm[:7] + rs2 + rs1 +funct3 + imm[7:] + opcode
+
+
