@@ -132,17 +132,19 @@ def encode_b(tokens, funct3, pc, label_tab, line_num):
     rs1 = reg2bin(tokens[1], line_num)
     rs2 = reg2bin(tokens[2], line_num)
     label = tokens[3]
-    # funct3_map = {
-    #     "beq": "000",
-    #     "bne": "001"
-    # }
-    # funct3 = funct3_map[tokens[0]]
-    if label not in label_tab:
-        error(line_num,"undefined label")
+    target = tokens[3]
 
-    offset = label_tab[label] - pc
-    imm = imm2bin(offset >> 1,13,line_num)   
+    if target.lstrip("-").isdigit():
+        offset = int(target)
+    
+    else:
+        if target not in label_tab:
+            error(line_num,"undefined label")
+    
+        offset = label_tab[target] - pc
 
+    imm = imm2bin(offset,13,line_num)
+   
     opcode = "1100011"
 
     imm12 = imm[0]
