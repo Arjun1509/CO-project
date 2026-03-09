@@ -114,4 +114,39 @@ def encode_s(tokens,line_num):
 
     return imm[:7] + rs2 + rs1 +funct3 + imm[7:] + opcode
 
+# b type instruction set
+def encode_b(tokens, funct3, pc, label_tab, line_num):
+    rs1 = reg_table(tokens[1], line_num)
+    rs2 = reg_table(tokens[2], line_num)
+    label = tokens[3]
+
+    if label not in label_tab:
+        error(line_num,"undefined label")
+
+    offset = label_tab[label] - pc
+    imm = imm2bin(offset,13,line_num)
+
+    opcode = "1100011"
+
+    return(
+        imm[0]+
+        imm[2:8]+
+        rs2+
+        rs1+
+        funct3+
+        imm[8:12]+
+        imm[1]+
+        opcode
+    )
+
+
+#u type instruction 
+def encode_u(tokens, opcode, line_no):
+    rd = reg_table(tokens[1], line_no)
+    imm = imm2bin(int(tokens[2]), 20, line_no)
+
+
+    return imm + rd + opcode
+
+
 
