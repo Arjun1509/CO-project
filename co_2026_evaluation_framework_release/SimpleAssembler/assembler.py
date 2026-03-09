@@ -79,14 +79,14 @@ def imm2bin(value, bits, line_num):
     if (value < min_range or value > max_range):
         error(line_num, "Immediate value out of range")
 
-    return format(value & (1<<bits)-1, f"0{bits}b")
+    return format(value & ((1<<bits)-1), f"0{bits}b")
 
 
 #r type instruction set 
 def encode_r(tokens, funct3, funct7, line_num):
-    rd = reg_table(tokens[1], line_num)
-    rs1 = reg_table(tokens[2], line_num)
-    rs2 = reg_table(tokens[3], line_num)
+    rd = reg2bin(tokens[1], line_num)
+    rs1 = reg2bin(tokens[2], line_num)
+    rs2 = reg2bin(tokens[3], line_num)
     opcode = "0110011"
 
     return funct7 + rs2 + rs1 + funct3 + rd + opcode
@@ -94,18 +94,31 @@ def encode_r(tokens, funct3, funct7, line_num):
 
 #i type instruction set
 def encode_i(tokens, funct3, opcode, line_num):
-    rd = reg_table(tokens[1], line_num)
-    rs1 = reg_table(tokens[2], line_num)
-    imm = imm2bin(int(tokens[3], 12, line_num))
+    rd = reg2bin(tokens[1], line_num)
+    rs1 = reg2bin(tokens[2], line_num)
+    imm = imm2bin(int(tokens[3]), 12, line_num)
 
     return imm + rs1 + funct3 + rd + opcode
+#lw instructuon
+def encode_lw(tokens,line_num):
+    rd = reg2bin(tokens[1],line_num)
+    imm_part,rs1 = tokens[2].split("(")
+    rs1 = rs1.replace(")","")
+    rs1 = reg2bin(rs1,line_num)
+
+    imm = imm2bin(int(imm_part),12,line_num)
+
+    opcode = "0000011"
+    funct3 = "010"
+
+    return imm + rs1 +funct3 + rd+ opcode
 
 # s type instruction set
 def encode_s(tokens,line_num):
-    rs2 = reg_table(tokens[1],line_num)
+    rs2 = reg2bin(tokens[1],line_num)
     imm_part,rs1 = tokens[2].split("(")
     rs1 = rs1.replace(")","")
-    rs1 = reg_table(rs1,line_num)
+    rs1 = reg2bin(rs1,line_num)
 
     imm = imm2bin(int(imm_part),12,line_num)
 
@@ -116,37 +129,140 @@ def encode_s(tokens,line_num):
 
 # b type instruction set
 def encode_b(tokens, funct3, pc, label_tab, line_num):
-    rs1 = reg_table(tokens[1], line_num)
-    rs2 = reg_table(tokens[2], line_num)
+    rs1 = reg2bin(tokens[1], line_num)
+    rs2 = reg2bin(tokens[2], line_num)
     label = tokens[3]
-
+    # funct3_map = {
+    #     "beq": "000",
+    #     "bne": "001"
+    # }
+    # funct3 = funct3_map[tokens[0]]
     if label not in label_tab:
         error(line_num,"undefined label")
 
     offset = label_tab[label] - pc
-    imm = imm2bin(offset,13,line_num)
+    imm = imm2bin(offset >> 1,13,line_num)   
 
     opcode = "1100011"
 
-    return(
-        imm[0]+
-        imm[2:8]+
-        rs2+
-        rs1+
-        funct3+
-        imm[8:12]+
-        imm[1]+
-        opcode
-    )
+    imm[12] = imm[0]
+    imm[10:5] = imm[2:8]
+    imm[4:1] = imm[8:12]
+    imm[11] = imm[1]
 
+
+    return imm[12] + imm[10:5] + rs2 + rs1 + funct3 + imm[4:1] + imm[11] + opcode
 
 #u type instruction 
 def encode_u(tokens, opcode, line_no):
-    rd = reg_table(tokens[1], line_no)
+    rd = reg2bin(tokens[1], line_no)
     imm = imm2bin(int(tokens[2]), 20, line_no)
 
 
     return imm + rd + opcode
 
+#j type instruction set
 
+def encode_j(tokens, pc, label_tab, line_num):
+    rd = reg2bin(tokens[1], line_num)
 
+    label = tokens[2]
+    if label not in label_tab:
+        error(line_num,"Undefined label")
+    offset = label_tab[label]-pc
+    imm = imm2bin(offset>>1,20,line_num)
+    opcode = "1101111"
+
+    imm[20] = imm[0]
+    imm[10:1] = imm[10:20]
+    imm[11] = imm[9]
+    imm[19:12] = imm[1:9]
+
+    return(imm[20] + imm[10:1]+imm[11]+imm[19:12]+rd+opcode)
+
+def instr_builder(lines, label_tab):
+    pc = 0
+    binary_lines =[]
+    for i, line in enumerate(lines):
+        if(":" in line):
+            part = line.split(":")
+            if(part[1].strip()==""):
+                continue
+            line = part[1].strip()
+        tokens = line.replace(","," ").split()
+        op = tokens[0]
+        #r
+        if(op == "add"):
+            binary = encode_r(tokens,"000","0000000",i+1)
+        elif(op == "sub"):
+            binary = encode_r(tokens,"000","0100000",i+1)
+        elif(op == "sll"):
+            binary = encode_r(tokens,"001","0000000",i+1)
+        elif(op == "slt"):
+            binary = encode_r(tokens,"010","0000000",i+1)
+        elif(op == "sltu"):
+            binary = encode_r(tokens,"011","0000000",i+1)
+        elif(op == "xor"):
+            binary = encode_r(tokens,"100","0000000",i+1)
+        elif(op == "srl"):
+            binary = encode_r(tokens,"101","0000000",i+1)
+        elif(op == "or"):
+            binary = encode_r(tokens,"110","0000000",i+1)
+        elif(op == "and"):
+            binary = encode_r(tokens,"111","0000000",i+1)
+
+        #i
+        elif(op == "addi"):
+            binary = encode_i(tokens,"000","0010011",i+1)
+        elif(op == "sltiu"):
+            binary = encode_i(tokens,"011","0010011",i+1)
+        elif(op == "jalr"):
+            binary = encode_i(tokens,"000","1100111",i+1)
+        elif(op == "lw"):
+            binary = encode_lw(tokens,i+1)
+        
+        #s
+        elif(op == "sw"):
+            binary = encode_s(tokens,i+1)
+        
+        #b
+        elif (op == "beq"):
+            binary = encode_b(tokens, "000", pc, label_tab, i+1)
+        elif (op == "bne"):
+            binary = encode_b(tokens, "001", pc, label_tab, i+1)
+        elif (op == "blt"):
+            binary = encode_b(tokens, "100", pc, label_tab, i+1)
+        elif (op == "bge"):
+            binary = encode_b(tokens, "101", pc, label_tab, i+1)
+        elif (op == "bltu"):
+            binary = encode_b(tokens, "110", pc, label_tab, i+1)
+        elif (op == "bgeu"):
+            binary = encode_b(tokens, "111", pc, label_tab, i+1)
+
+        #u
+        elif (op == "lui"):
+            binary = encode_u(tokens,"0110111", i+1)
+        elif (op == "auipc"):
+            binary = encode_u(tokens,"0010111", i+1)
+
+        #j
+        elif (op == "jal"):
+                binary = encode_j(tokens, pc, label_tab, i+1)
+        else:
+            error(i+1, "Invalid instruction")
+
+        binary_lines.append(binary)
+        pc+=4
+
+    return binary_lines
+
+def main():
+    lines, output_file = input_reader()
+    label_tab = label_mapper(lines)
+    binary = instr_builder(lines, label_tab)
+    with open(output_file,"w") as out:
+        for b in binary:
+            out.write(b+"\n")
+        
+if(__name__ == "__main__"):
+    main()
