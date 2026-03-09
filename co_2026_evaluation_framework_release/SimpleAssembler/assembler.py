@@ -145,13 +145,13 @@ def encode_b(tokens, funct3, pc, label_tab, line_num):
 
     opcode = "1100011"
 
-    imm[12] = imm[0]
-    imm[10:5] = imm[2:8]
-    imm[4:1] = imm[8:12]
-    imm[11] = imm[1]
+    imm12 = imm[0]
+    imm10_5 = imm[2:8]
+    imm4_1 = imm[8:12]
+    imm11 = imm[1]
 
 
-    return imm[12] + imm[10:5] + rs2 + rs1 + funct3 + imm[4:1] + imm[11] + opcode
+    return imm12 + imm10_5 + rs2 + rs1 + funct3 + imm4_1 + imm11 + opcode
 
 #u type instruction 
 def encode_u(tokens, opcode, line_no):
@@ -170,15 +170,15 @@ def encode_j(tokens, pc, label_tab, line_num):
     if label not in label_tab:
         error(line_num,"Undefined label")
     offset = label_tab[label]-pc
-    imm = imm2bin(offset>>1,20,line_num)
+    imm = imm2bin(offset>>1,21,line_num)
     opcode = "1101111"
 
-    imm[20] = imm[0]
-    imm[10:1] = imm[10:20]
-    imm[11] = imm[9]
-    imm[19:12] = imm[1:9]
+    imm20 = imm[0]
+    imm10_1 = imm[10:20]
+    imm11 = imm[9]
+    imm19_12 = imm[1:9]
 
-    return(imm[20] + imm[10:1]+imm[11]+imm[19:12]+rd+opcode)
+    return imm20 + imm10_1 +imm11 +imm19_12 +rd+opcode
 
 def instr_builder(lines, label_tab):
     pc = 0
