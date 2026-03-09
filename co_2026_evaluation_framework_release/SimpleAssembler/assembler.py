@@ -172,7 +172,7 @@ def encode_j(tokens, pc, label_tab, line_num):
     if label not in label_tab:
         error(line_num,"Undefined label")
     offset = label_tab[label]-pc
-    imm = imm2bin(offset>>1,21,line_num)
+    imm = imm2bin(offset,21,line_num)
     opcode = "1101111"
 
     imm20 = imm[0]
