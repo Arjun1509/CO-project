@@ -47,11 +47,12 @@ def label_mapper(lines):
 
 #registers table
 reg_table = {
+
     "zero": 0, "ra":1,
     "sp":2, "gp":3,
     "tp":4, "t0":5,
     "t1":6, "t2":7,
-    "s0":8, "s1":9,
+    "s0":8, "s1":9,"fp":8,
     "a0":10, "a1":11,
     "a2":12, "a3":13,
     "a4":14, "a5":15,
@@ -95,9 +96,14 @@ def encode_r(tokens, funct3, funct7, line_num):
 #i type instruction set
 def encode_i(tokens, funct3, opcode, line_num):
     rd = reg2bin(tokens[1], line_num)
-    rs1 = reg2bin(tokens[2], line_num)
-    imm = imm2bin(int(tokens[3]), 12, line_num)
-
+    if("(" in tokens[2]):
+        imm_part, rs1 = tokens[2].split("(")
+        rs1 = rs1.replace(")","")
+        rs1 = reg2bin(rs1,line_num)
+        imm = imm2bin(int(imm_part),12,line_num)
+    else:
+        rs1 = reg2bin(tokens[2], line_num)
+        imm = imm2bin(int (tokens[3]),12,line_num)
     return imm + rs1 + funct3 + rd + opcode
 #lw instructuon
 def encode_lw(tokens,line_num):
@@ -158,7 +164,7 @@ def encode_b(tokens, funct3, pc, label_tab, line_num):
 #u type instruction 
 def encode_u(tokens, opcode, line_no):
     rd = reg2bin(tokens[1], line_no)
-    imm = imm2bin(int(tokens[2]), 20, line_no)
+    imm = imm2bin(int(tokens[2])>>12, 20, line_no)
 
 
     return imm + rd + opcode
@@ -167,14 +173,15 @@ def encode_u(tokens, opcode, line_no):
 
 def encode_j(tokens, pc, label_tab, line_num):
     rd = reg2bin(tokens[1], line_num)
-
     label = tokens[2]
-    if label not in label_tab:
-        error(line_num,"Undefined label")
-    offset = label_tab[label]-pc
+    if label.lstrip("-").isdigit():
+        offset = int(label)
+    else:
+        if label not in label_tab:
+            error(line_num,"Undefined label")
+        offset = label_tab[label]-pc
     imm = imm2bin(offset,21,line_num)
     opcode = "1101111"
-
     imm20 = imm[0]
     imm10_1 = imm[10:20]
     imm11 = imm[9]
@@ -187,7 +194,7 @@ def instr_builder(lines, label_tab):
     binary_lines =[]
     for i, line in enumerate(lines):
         if(":" in line):
-            part = line.split(":")
+            part = line.split(":",1)
             if(part[1].strip()==""):
                 continue
             line = part[1].strip()
@@ -256,6 +263,11 @@ def instr_builder(lines, label_tab):
         binary_lines.append(binary)
         pc+=4
 
+    if not binary_lines:
+        error(len(lines),"No instruction found")
+    VIRTUAL_HALT = "00000000000000000000000001100011"
+    if(binary_lines[-1]!= VIRTUAL_HALT):
+        error(len(lines),"Missing or misplaced Virtual halt(beq zero,zero,0)")
     return binary_lines
 
 def main():
