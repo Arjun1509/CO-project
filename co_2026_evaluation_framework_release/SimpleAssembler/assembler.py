@@ -1,12 +1,10 @@
 import sys
 
 def error(ln_num, msg):
-#prints error as per file
     print(f"error at line{ln_num} : {msg}" )
     sys.exit(0)
 
 def input_reader():
-#reads the input 
     if (len(sys.argv) < 3 or len(sys.argv)>4):
         print("Invalid arguments")
         sys.exit(0)
@@ -20,7 +18,6 @@ def input_reader():
     return lines, ofile
 
 def label_mapper(lines):
-#it identifies the labels acc to file and assigns pc addresses to them
     label_table = {}
     pc = 0
 
@@ -45,7 +42,7 @@ def label_mapper(lines):
 
     return label_table
 
-#registers table
+#registir tables
 reg_table = {
 
     "zero": 0, "ra":1,
@@ -66,7 +63,7 @@ reg_table = {
     "t5":30, "t6":31
     }
 
-#converts register num to binary 
+#converts register num to binaryy
 def reg2bin(reg, line_num) :
     if reg not in reg_table:
         error(line_num, "Invalid register\n")
@@ -83,7 +80,7 @@ def imm2bin(value, bits, line_num):
     return format(value & ((1<<bits)-1), f"0{bits}b")
 
 
-#r type instruction set 
+#r instruction set 
 def encode_r(tokens, funct3, funct7, line_num):
     rd = reg2bin(tokens[1], line_num)
     rs1 = reg2bin(tokens[2], line_num)
@@ -93,7 +90,8 @@ def encode_r(tokens, funct3, funct7, line_num):
     return funct7 + rs2 + rs1 + funct3 + rd + opcode
 
 
-#i type instruction set
+
+#i instruction set
 def encode_i(tokens, funct3, opcode, line_num):
     rd = reg2bin(tokens[1], line_num)
     if("(" in tokens[2]):
@@ -119,6 +117,7 @@ def encode_lw(tokens,line_num):
 
     return imm + rs1 +funct3 + rd+ opcode
 
+
 # s type instruction set
 def encode_s(tokens,line_num):
     rs2 = reg2bin(tokens[1],line_num)
@@ -132,6 +131,7 @@ def encode_s(tokens,line_num):
     funct3 = "010"
 
     return imm[:7] + rs2 + rs1 +funct3 + imm[7:] + opcode
+
 
 # b type instruction set
 def encode_b(tokens, funct3, pc, label_tab, line_num):
@@ -153,11 +153,13 @@ def encode_b(tokens, funct3, pc, label_tab, line_num):
    
     opcode = "1100011"
 
+    
     imm12 = imm[0]
     imm10_5 = imm[2:8]
     imm4_1 = imm[8:12]
     imm11 = imm[1]
 
+    
 
     return imm12 + imm10_5 + rs2 + rs1 + funct3 + imm4_1 + imm11 + opcode
 
@@ -168,6 +170,8 @@ def encode_u(tokens, opcode, line_no):
 
 
     return imm + rd + opcode
+
+
 
 #j type instruction set
 
@@ -187,7 +191,9 @@ def encode_j(tokens, pc, label_tab, line_num):
     imm11 = imm[9]
     imm19_12 = imm[1:9]
 
+   
     return imm20 + imm10_1 +imm11 +imm19_12 +rd+opcode
+
 
 def instr_builder(lines, label_tab):
     pc = 0
