@@ -39,4 +39,4 @@ def sext(val, width):
 
 #formats value as char binary string
 def to_bin32(val):
-    return format(to_unsigned32(val), "032b")
+    return "0b" + format(to_unsigned32(val), "032b")
