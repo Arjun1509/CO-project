@@ -1,4 +1,5 @@
 import sys
+import os
 from Devesh import load_prog, mem_dump
 from Anand import simulate
 
@@ -22,6 +23,8 @@ def main():
     prog = load_prog(lines)
     out_lines = simulate(prog, mem)
     mem_lines = mem_dump(mem)
+
+    os.makedirs(os.path.dirname(ofile), exist_ok=True)
 
     with open(ofile, "w") as out:
         for ln in out_lines + mem_lines:
