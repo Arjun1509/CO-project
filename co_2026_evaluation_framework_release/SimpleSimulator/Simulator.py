@@ -1,4 +1,6 @@
 import sys
+from Devesh import load_prog, mem_dump
+from Anand import simulate
 
 def input_reader():
     if len(sys.argv) != 4:
@@ -16,9 +18,14 @@ def input_reader():
 def main():
     lines, ofile = input_reader()
 
+    mem  = {}
+    prog = load_prog(lines)
+    out_lines = simulate(prog, mem)
+    mem_lines = mem_dump(mem)
+
     with open(ofile, "w") as out:
-        # deliberately write garbage output so all tests fail
-        out.write("error at line0 : invalid instruction encountered\n")
+        for ln in out_lines + mem_lines:
+            out.write(ln + "\n")
 
 if __name__ == "__main__":
     main()
