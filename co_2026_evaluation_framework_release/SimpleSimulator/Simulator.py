@@ -3,7 +3,7 @@ from Devesh import load_prog, mem_dump
 from Anand import simulate
 
 def input_reader():
-    if len(sys.argv) != 4:
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
         print("Invalid arguments")
         sys.exit(0)
 
