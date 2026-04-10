@@ -155,7 +155,7 @@ def simulate(prog, mem):
         else:
             snapPc = nextPc
 
-        regStr = " ".join(to_bin32(r) for r in reg)
+        regStr = " ".join(to_bin32(r) for r in reg) + " "
         outLines.append(to_bin32(snapPc) + " " + regStr)
         
         pc = nextPc
