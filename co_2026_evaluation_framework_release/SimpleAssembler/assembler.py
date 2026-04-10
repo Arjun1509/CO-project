@@ -7,7 +7,7 @@ def error(ln_num, msg):
 
 def input_reader():
 #reads the input 
-    if len(sys.argv) != 3:
+    if (len(sys.argv) < 3 or len(sys.argv>4)):
         print("Invalid arguments")
         sys.exit(0)
 
